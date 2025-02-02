@@ -3,10 +3,14 @@ import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
 
-// Define the props type manually
-export default async function EditPropertyPage({ params }: { params: { id: string } }) {
-  // Ensure params exist
-  if (!params?.id) {
+interface EditPropertyPageProps {
+  params: { id: string };
+}
+
+export default async function EditPropertyPage({ params }: EditPropertyPageProps) {
+  // Ensure params is a plain object
+  const propertyId = params?.id;
+  if (!propertyId) {
     notFound();
   }
 
@@ -18,7 +22,7 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
 
   // Fetch the property that belongs to the user
   const property = await prisma.property.findFirst({
-    where: { id: params.id, ownerId: user.id },
+    where: { id: propertyId, ownerId: user.id },
   });
 
   if (!property) {

@@ -38,6 +38,12 @@ declare module "next-auth" {
   }
 }
 
+interface PageProps {
+  params: {
+    id: string; // Or a more general { [key: string]: string | string[] }
+  };
+}
+
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
