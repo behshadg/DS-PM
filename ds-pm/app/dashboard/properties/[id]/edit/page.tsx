@@ -7,7 +7,7 @@ import EditPropertyForm from "components/EditPropertyForm";
 export default async function EditPropertyPage({
   params
 }: {
-  params: { id: string }
+  params: { id: string } & { params?: never }
 }) {
   const propertyId = params?.id;
   if (!propertyId) notFound();
