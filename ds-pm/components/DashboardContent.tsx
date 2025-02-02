@@ -8,24 +8,7 @@ import { PropertyWithTenants, TenantWithProperty } from "@/types";
 type DashboardContentProps = {
   user: {
     name?: string;
-    properties: (PropertyWithTenants | {
-      id: string;
-      address: string;
-      title: string;
-      description: string;
-      state: string;
-      bedrooms: number;
-      bathrooms: number;
-      price: number;
-      city: string;
-      zipCode: string;
-      images: string[];
-      createdAt: string; // or Date, as appropriate
-      updatedAt: string;
-      ownerId: string;
-      // In case tenants isn’t included, default to an empty array.
-      tenants?: TenantWithProperty[];
-    })[];
+    properties: PropertyWithTenants[];
     tenants: TenantWithProperty[];
   };
 };
@@ -46,7 +29,6 @@ export default function DashboardContent({ user }: DashboardContentProps) {
           </Link>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Properties Section */}
         <div className="bg-card rounded-lg shadow p-6">
@@ -58,41 +40,50 @@ export default function DashboardContent({ user }: DashboardContentProps) {
           ) : (
             <div className="space-y-4">
               {user.properties.map((property) => {
-                // Ensure tenants is always an array.
                 const tenants = property.tenants ?? [];
                 return (
-                  <div
-                    key={property.id}
-                    className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
-                  >
-                    <h3 className="font-medium">{property.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {property.address}, {property.city}
-                    </p>
-                    <div className="mt-2 flex gap-4 text-sm">
-                      <span>{property.bedrooms} beds</span>
-                      <span>{property.bathrooms} baths</span>
-                      <span>${property.price}/mo</span>
-                    </div>
-                    {tenants.length > 0 && (
-                      <div className="mt-2 text-sm">
-                        <span className="text-muted-foreground">
-                          Tenants:{" "}
-                        </span>
-                        {tenants.map((tenant) => (
-                          <span key={tenant.id} className="mr-2">
-                            {tenant.name}
-                          </span>
-                        ))}
+                  <Link key={property.id} href={`/dashboard/properties/${property.id}`}>
+                    <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      {property.images && property.images.length > 0 && (
+                        // You can use Next.js Image component if configured
+                        <img
+                          src={property.images[0]}
+                          alt={property.title}
+                          className="w-full h-48 object-cover rounded mb-2"
+                        />
+                      )}
+                      <h3 className="font-medium">{property.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {property.address}, {property.city}
+                      </p>
+                      <div className="mt-2 flex gap-4 text-sm">
+                        <span>{property.bedrooms} beds</span>
+                        <span>{property.bathrooms} baths</span>
+                        <span>${property.price}/mo</span>
                       </div>
-                    )}
-                  </div>
+                      {tenants.length > 0 && (
+                        <div className="mt-2 text-sm">
+                          <span className="text-muted-foreground">Tenants: </span>
+                          {tenants.map((tenant) => (
+                            <span key={tenant.id} className="mr-2">
+                              {tenant.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-2 flex gap-2">
+                        <Link href={`/dashboard/properties/${property.id}/edit`}>
+                          <Button variant="outline" size="sm">Edit</Button>
+                        </Link>
+                        {/* Include a delete button if desired */}
+                      </div>
+                    </div>
+                  </Link>
                 );
               })}
             </div>
           )}
         </div>
-
         {/* Tenants Section */}
         <div className="bg-card rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Active Tenants</h2>
@@ -113,9 +104,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                   </p>
                   {tenant.property && (
                     <div className="mt-2 text-sm">
-                      <span className="text-muted-foreground">
-                        Property:{" "}
-                      </span>
+                      <span className="text-muted-foreground">Property: </span>
                       <Link
                         href={`/dashboard/properties/${tenant.property.id}`}
                         className="text-primary hover:underline"

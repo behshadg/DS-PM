@@ -3,13 +3,21 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { PropertyWithTenants } from "@/types";
-
-// Adjust your type if needed. For instance, if some properties might not have tenants,
-// you can either make tenants optional or default them to an empty array.
+import Link from "next/link";
+import { Button } from "components/ui/button";
+import { DeleteProperty } from "./delete-property";
 export const columns: ColumnDef<PropertyWithTenants>[] = [
   {
     accessorKey: "title",
     header: "Title",
+    cell: ({ row }) => (
+      <Link 
+        href={`/dashboard/properties/${row.original.id}`}
+        className="hover:underline"
+      >
+        {row.original.title}
+      </Link>
+    )
   },
   {
     accessorKey: "address",
@@ -22,25 +30,20 @@ export const columns: ColumnDef<PropertyWithTenants>[] = [
   {
     accessorKey: "price",
     header: "Price",
-    cell: ({ row }) => {
-      return <span>${row.original.price}</span>;
-    },
+    cell: ({ row }) => <span>${row.original.price}</span>,
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
-      // For example, an edit button
-      return (
-        <button
-          onClick={() => {
-            // Handle edit action – make sure this function is defined inside this client module.
-            console.log("Edit", row.original.id);
-          }}
-        >
-          Edit
-        </button>
-      );
-    },
+    cell: ({ row }) => (
+      <div className="flex gap-2">
+        <Link href={`/dashboard/properties/${row.original.id}/edit`}>
+          <Button variant="outline" size="sm">
+            Edit
+          </Button>
+        </Link>
+        <DeleteProperty propertyId={row.original.id} />
+      </div>
+    ),
   },
 ];

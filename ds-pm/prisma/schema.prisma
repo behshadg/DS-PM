@@ -38,14 +38,25 @@ model Property {
 }
 
 model Tenant {
-  id         String   @id @default(cuid())
+  id         String           @id @default(cuid())
   name       String
-  email      String   @unique
+  email      String           @unique
   phone      String
-  property   Property @relation(fields: [propertyId], references: [id])
+  property   Property         @relation(fields: [propertyId], references: [id])
   propertyId String
-  owner      User     @relation(fields: [ownerId], references: [id])
+  owner      User             @relation(fields: [ownerId], references: [id])
   ownerId    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  documents  TenantDocument[] // New relation: tenant can have multiple documents.
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model TenantDocument {
+  id           String    @id @default(cuid())
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  tenantId     String
+  url          String    // URL of the uploaded document
+  documentType String?   // e.g., "lease", "rentalApplication", etc.
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

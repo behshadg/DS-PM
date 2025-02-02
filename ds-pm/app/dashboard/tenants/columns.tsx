@@ -1,18 +1,12 @@
 // app/dashboard/tenants/columns.tsx
+"use client"; // Add this at the top
+
 import { ColumnDef } from "@tanstack/react-table"
-import { Tenant } from "@prisma/client"
 import Link from "next/link"
 import { Button } from "components/ui/button"
+import { TenantWithProperty } from "@/types"
 
-export type TenantColumn = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  property: string | null
-}
-
-export const columns: ColumnDef<TenantColumn>[] = [
+export const columns: ColumnDef<TenantWithProperty>[] = [
   {
     accessorKey: "name",
     header: "Name",
@@ -28,7 +22,10 @@ export const columns: ColumnDef<TenantColumn>[] = [
   {
     accessorKey: "property",
     header: "Property",
-    cell: ({ row }) => row.getValue("property") || "Unassigned",
+    cell: ({ row }) => {
+      const property = row.original.property;
+      return property ? `${property.address}, ${property.city}` : "Unassigned";
+    },
   },
   {
     id: "actions",

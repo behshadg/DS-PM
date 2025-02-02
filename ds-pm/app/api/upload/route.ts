@@ -9,11 +9,12 @@ cloudinary.config({
 
 export async function POST(request: Request) {
   try {
-    const { image } = await request.json()
+    const { image, folder } = await request.json()
+
+    const uploadFolder = folder || 'properties';
     
-    // Upload base64 image to Cloudinary
     const result = await cloudinary.uploader.upload(image, {
-      folder: 'properties'
+      folder: uploadFolder
     })
 
     return NextResponse.json({ url: result.secure_url })

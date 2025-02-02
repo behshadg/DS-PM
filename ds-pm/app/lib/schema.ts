@@ -13,11 +13,17 @@ export const PropertySchema = z.object({
   images: z.array(z.string()).min(1, "At least one image required")
 })
 
+export const TenantDocumentSchema = z.object({
+  url: z.string().url(),
+  documentType: z.string().optional(),
+});
+
 export const TenantSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Enter a valid phone number"),
-  propertyId: z.string().min(1, "Property selection required")
+  propertyId: z.string().min(1, "Property selection required"),
+  documents: z.array(TenantDocumentSchema).optional()
 })
 
 export const LoginSchema = z.object({

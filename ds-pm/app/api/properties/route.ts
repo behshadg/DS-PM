@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/app/lib/db'
-import { getCurrentUser } from '@/app/lib/auth'
+import prisma from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function GET() {
   const user = await getCurrentUser()
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
       images: body.images || []
     }
   })
+
   
   return NextResponse.json(property)
 }

@@ -1,4 +1,6 @@
 // app/dashboard/tenants/page.tsx
+'use server'
+
 import { DataTable } from "components/data-table"
 import { columns } from "./columns"
 import { Button } from "components/ui/button"

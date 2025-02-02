@@ -15,6 +15,13 @@ export type PropertyWithTenants = Property & {
 export type TenantWithProperty = Tenant & {
   property: Property | null;
 };
+export type TenantWithPropertySafe = Tenant & {
+  property: {
+    address: string;
+    city: string;
+    // Add other property fields you use in the UI
+  } | null;
+};
 
 // NextAuth type extensions
 declare module "next-auth" {
