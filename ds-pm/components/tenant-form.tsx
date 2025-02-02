@@ -29,18 +29,52 @@ interface TenantFormProps {
 }
 
 export function TenantForm({ onSuccess, properties }: TenantFormProps) {
+  // Initialize the form with validation using your Zod TenantSchema.
   const form = useForm({
     resolver: zodResolver(TenantSchema),
   });
 
-  // State to hold uploaded document data.
+  // State to hold tenant document objects (each with a URL, optionally a type)
   const [documents, setDocuments] = useState<DocumentData[]>([]);
   const [formError, setFormError] = useState("");
 
+  // Helper function: convert a blob URL (local preview) into a base64 string.
+  async function convertBlobUrlToBase64(url: string): Promise<string> {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   async function onSubmit(values: any) {
     try {
-      // Combine the form values with the documents array.
-      const payload = { ...values, documents };
+      // Process each document: if its URL starts with "blob:", convert and upload it.
+      const uploadedDocs = await Promise.all(
+        documents.map(async (doc) => {
+          if (doc.url.startsWith("blob:")) {
+            const base64 = await convertBlobUrlToBase64(doc.url);
+            const response = await fetch("/api/upload", {
+              method: "POST",
+              body: JSON.stringify({ image: base64, folder: "tenant-documents" }),
+              headers: { "Content-Type": "application/json" },
+            });
+            const result = await response.json();
+            if (!response.ok) {
+              throw new Error(result.error || "Document upload failed");
+            }
+            return { ...doc, url: result.url };
+          } else {
+            return doc;
+          }
+        })
+      );
+
+      // Combine form values with the processed documents.
+      const payload = { ...values, documents: uploadedDocs };
       await createTenant(payload);
       onSuccess();
     } catch (error) {
@@ -51,10 +85,9 @@ export function TenantForm({ onSuccess, properties }: TenantFormProps) {
     }
   }
 
-  // Handler for uploading tenant documents.
+  // Handlers for document uploads using your FileUpload component.
   const handleDocumentUpload = async (urls: string[]) => {
-    // For each uploaded file URL, create a DocumentData object.
-    // (In production you might also collect a document type.)
+    // We simply store the file URLs (local blob URLs) in state for now.
     const newDocs = urls.map((url) => ({ url }));
     setDocuments((prev) => [...prev, ...newDocs]);
   };
@@ -66,7 +99,7 @@ export function TenantForm({ onSuccess, properties }: TenantFormProps) {
   return (
     <Form methods={form} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Tenant basic fields */}
+        {/* Tenant Basic Fields */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
             Full Name
@@ -89,7 +122,9 @@ export function TenantForm({ onSuccess, properties }: TenantFormProps) {
         <div>
           <label className="block text-sm font-medium text-gray-700">Property</label>
           <Select
-            onValueChange={(value) => form.setValue("propertyId", value, { shouldValidate: true })}
+            onValueChange={(value) =>
+              form.setValue("propertyId", value, { shouldValidate: true })
+            }
             value={form.watch("propertyId") || ""}
           >
             <SelectTrigger>

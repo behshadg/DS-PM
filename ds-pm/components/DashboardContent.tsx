@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "components/ui/button";
 import { PropertyWithTenants, TenantWithProperty } from "@/types";
 
@@ -14,6 +15,8 @@ type DashboardContentProps = {
 };
 
 export default function DashboardContent({ user }: DashboardContentProps) {
+  const router = useRouter();
+
   return (
     <div className="p-6 space-y-8">
       <div className="flex justify-between items-center">
@@ -42,43 +45,54 @@ export default function DashboardContent({ user }: DashboardContentProps) {
               {user.properties.map((property) => {
                 const tenants = property.tenants ?? [];
                 return (
-                  <Link key={property.id} href={`/dashboard/properties/${property.id}`}>
-                    <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                      {property.images && property.images.length > 0 && (
-                        // You can use Next.js Image component if configured
+                  <div
+                    key={property.id}
+                    className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() =>
+                      router.push(`/dashboard/properties/${property.id}`)
+                    }
+                  >
+                    {property.images &&
+                      property.images.length > 0 && (
                         <img
                           src={property.images[0]}
                           alt={property.title}
                           className="w-full h-48 object-cover rounded mb-2"
                         />
                       )}
-                      <h3 className="font-medium">{property.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {property.address}, {property.city}
-                      </p>
-                      <div className="mt-2 flex gap-4 text-sm">
-                        <span>{property.bedrooms} beds</span>
-                        <span>{property.bathrooms} baths</span>
-                        <span>${property.price}/mo</span>
-                      </div>
-                      {tenants.length > 0 && (
-                        <div className="mt-2 text-sm">
-                          <span className="text-muted-foreground">Tenants: </span>
-                          {tenants.map((tenant) => (
-                            <span key={tenant.id} className="mr-2">
-                              {tenant.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="mt-2 flex gap-2">
-                        <Link href={`/dashboard/properties/${property.id}/edit`}>
-                          <Button variant="outline" size="sm">Edit</Button>
-                        </Link>
-                        {/* Include a delete button if desired */}
-                      </div>
+                    <h3 className="font-medium">{property.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {property.address}, {property.city}
+                    </p>
+                    <div className="mt-2 flex gap-4 text-sm">
+                      <span>{property.bedrooms} beds</span>
+                      <span>{property.bathrooms} baths</span>
+                      <span>${property.price}/mo</span>
                     </div>
-                  </Link>
+                    {tenants.length > 0 && (
+                      <div className="mt-2 text-sm">
+                        <span className="text-muted-foreground">Tenants: </span>
+                        {tenants.map((tenant) => (
+                          <span key={tenant.id} className="mr-2">
+                            {tenant.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-2 flex gap-2">
+                      {/* The Edit button is wrapped in its own Link and stops propagation */}
+                      <Link href={`/dashboard/properties/${property.id}/edit`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Edit
+                        </Button>
+                      </Link>
+                      {/* You can add a delete button here if desired */}
+                    </div>
+                  </div>
                 );
               })}
             </div>
