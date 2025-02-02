@@ -3,12 +3,10 @@ import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
 
-interface EditPropertyPageProps {
-  params: { id: string };
-}
-
-export default async function EditPropertyPage({ params }: EditPropertyPageProps) {
-  if (!params || !params.id) {
+// Define the props type manually
+export default async function EditPropertyPage({ params }: { params: { id: string } }) {
+  // Ensure params exist
+  if (!params?.id) {
     notFound();
   }
 
