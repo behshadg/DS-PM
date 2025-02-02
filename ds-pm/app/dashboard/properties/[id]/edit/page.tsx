@@ -21,12 +21,10 @@ export default async function EditPropertyPage({
 
   if (!property) notFound();
 
-  const serializableProperty = JSON.parse(JSON.stringify(property));
-
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Edit Property</h1>
-      <EditPropertyForm initialData={serializableProperty} />
+      <EditPropertyForm initialData={JSON.parse(JSON.stringify(property))} />
     </div>
   );
 }
