@@ -4,12 +4,18 @@ import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
 
+// Explicit type union to satisfy both possibilities
+type PageParams = { id: string } | Promise<{ id: string }>;
+
 export default async function EditPropertyPage({
   params
 }: {
-  params: { id: string } & { params?: never }
+  params: PageParams
 }) {
-  const propertyId = params?.id;
+  // Resolve the params whether they come as Promise or object
+  const resolvedParams = await Promise.resolve(params);
+  const propertyId = resolvedParams.id;
+
   if (!propertyId) notFound();
 
   const user = await getCurrentUser();
