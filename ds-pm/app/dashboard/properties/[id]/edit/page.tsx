@@ -1,14 +1,17 @@
-// app/dashboard/properties/[id]/edit/page.tsx
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
 
-export default async function EditPropertyPage({
-  params,
-}: {
+interface EditPropertyPageProps {
   params: { id: string };
-}) {
+}
+
+export default async function EditPropertyPage({ params }: EditPropertyPageProps) {
+  if (!params || !params.id) {
+    notFound();
+  }
+
   // Get the current user (server-side function)
   const user = await getCurrentUser();
   if (!user) {
@@ -19,6 +22,7 @@ export default async function EditPropertyPage({
   const property = await prisma.property.findFirst({
     where: { id: params.id, ownerId: user.id },
   });
+
   if (!property) {
     notFound();
   }
