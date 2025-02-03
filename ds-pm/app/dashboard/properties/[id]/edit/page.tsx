@@ -2,14 +2,13 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
-
 interface PageProps {
   params: { id: string };
 }
 
 export default async function EditPropertyPage({ params }: PageProps) {
-  // ✅ Ensure params exist
-  if (!params?.id) {
+
+  if (!params || !params.id) {
     return notFound();
   }
 
@@ -18,7 +17,6 @@ export default async function EditPropertyPage({ params }: PageProps) {
     redirect("/login");
   }
 
-  // Fetch the property that belongs to the user
   const property = await prisma.property.findFirst({
     where: { id: params.id, ownerId: user.id },
   });
