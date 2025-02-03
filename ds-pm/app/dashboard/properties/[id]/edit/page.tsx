@@ -1,31 +1,31 @@
-// app/dashboard/properties/[id]/edit/page.tsx
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
 
-// Explicit type union to satisfy both possibilities
-type PageParams = { id: string } | Promise<{ id: string }>;
+interface PageProps {
+  params: { id: string };
+}
 
-export default async function EditPropertyPage({
-  params
-}: {
-  params: PageParams
-}) {
-  // Resolve the params whether they come as Promise or object
-  const resolvedParams = await Promise.resolve(params);
-  const propertyId = resolvedParams.id;
-
-  if (!propertyId) notFound();
+export default async function EditPropertyPage({ params }: PageProps) {
+  // ✅ Ensure params exist
+  if (!params?.id) {
+    return notFound();
+  }
 
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    redirect("/login");
+  }
 
+  // Fetch the property that belongs to the user
   const property = await prisma.property.findFirst({
-    where: { id: propertyId, ownerId: user.id },
+    where: { id: params.id, ownerId: user.id },
   });
 
-  if (!property) notFound();
+  if (!property) {
+    return notFound();
+  }
 
   return (
     <div className="p-6">
