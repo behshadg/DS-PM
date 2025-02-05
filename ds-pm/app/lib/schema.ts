@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 export const PropertySchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -11,7 +11,11 @@ export const PropertySchema = z.object({
   state: z.string().length(2, "Use 2-letter state code"),
   zipCode: z.string().min(5, "Enter a valid ZIP code"),
   images: z.array(z.string()).min(1, "At least one image required")
-})
+});
+
+export const PropertyUpdateSchema = PropertySchema.extend({
+  id: z.string().min(1, "Property id is required")
+});
 
 export const TenantDocumentSchema = z.object({
   url: z.string().url(),
@@ -24,9 +28,9 @@ export const TenantSchema = z.object({
   phone: z.string().min(10, "Enter a valid phone number"),
   propertyId: z.string().min(1, "Property selection required"),
   documents: z.array(TenantDocumentSchema).optional()
-})
+});
 
 export const LoginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters')
-})
+});

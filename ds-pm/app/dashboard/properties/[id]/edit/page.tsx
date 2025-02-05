@@ -1,14 +1,19 @@
+// /app/dashboard/properties/[id]/edit/page.tsx
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
+
 interface PageProps {
-  params: { id: string };
+  params: { id: string }; // This is fine because `await`ing a plain object returns it.
 }
 
 export default async function EditPropertyPage({ params }: PageProps) {
+  // Await the params (if they are a promise, this will resolve them;
+  // if they’re already an object, this works fine)
+  const resolvedParams = await params;
 
-  if (!params || !params.id) {
+  if (!resolvedParams || !resolvedParams.id) {
     return notFound();
   }
 
@@ -18,7 +23,7 @@ export default async function EditPropertyPage({ params }: PageProps) {
   }
 
   const property = await prisma.property.findFirst({
-    where: { id: params.id, ownerId: user.id },
+    where: { id: resolvedParams.id, ownerId: user.id },
   });
 
   if (!property) {

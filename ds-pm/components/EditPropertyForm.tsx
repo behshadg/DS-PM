@@ -1,10 +1,9 @@
-// components/EditPropertyForm.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PropertySchema } from "@/lib/schema";
+import { PropertySchema } from "@/lib/schema"; // used for creation; update uses PropertyUpdateSchema in the action
 import { updateProperty } from "@/actions/properties"; // Your server action for updates (marked with 'use server')
 import { Form } from "components/ui/form";
 import { Input } from "components/ui/input";
@@ -75,7 +74,8 @@ export default function EditPropertyForm({ initialData }: EditPropertyFormProps)
               headers: { "Content-Type": "application/json" },
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.error || "Image upload failed");
+            if (!response.ok)
+              throw new Error(result.error || "Image upload failed");
             return result.url;
           }
           return url;
@@ -83,6 +83,7 @@ export default function EditPropertyForm({ initialData }: EditPropertyFormProps)
       );
 
       // Call the updateProperty action with form data.
+      // Because of the hidden input, data.id is included.
       const updated = await updateProperty({ ...data, images: uploadedUrls });
       // Convert result to plain JSON.
       const plainResult = JSON.parse(JSON.stringify(updated));
@@ -93,7 +94,8 @@ export default function EditPropertyForm({ initialData }: EditPropertyFormProps)
       // Navigate to the property detail page.
       router.push(`/dashboard/properties/${data.id}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to update property";
+      const message =
+        err instanceof Error ? err.message : "Failed to update property";
       setFormError(message);
       toast.error(message, { id: toastId });
     } finally {
@@ -102,7 +104,14 @@ export default function EditPropertyForm({ initialData }: EditPropertyFormProps)
   };
 
   return (
-    <Form methods={form} onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+    <Form
+      methods={form}
+      onSubmit={form.handleSubmit(handleSubmit)}
+      className="space-y-6"
+    >
+      {/* Hidden input for property id */}
+      <input type="hidden" {...form.register("id")} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700">
@@ -159,7 +168,11 @@ export default function EditPropertyForm({ initialData }: EditPropertyFormProps)
         </label>
         <Textarea id="description" placeholder="Beautiful modern apartment in the heart of the city" {...form.register("description")} />
       </div>
-      <FileUpload onUpload={handleImageUpload} onRemove={handleImageRemove} initialFiles={form.watch("images")} />
+      <FileUpload
+        onUpload={handleImageUpload}
+        onRemove={handleImageRemove}
+        initialFiles={form.watch("images")}
+      />
       {formError && (
         <div className="p-3 bg-red-100 text-red-700 rounded-md">{formError}</div>
       )}

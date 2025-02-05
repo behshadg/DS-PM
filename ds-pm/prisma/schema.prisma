@@ -1,3 +1,5 @@
+// schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,19 +9,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+///
+/// User Model
+///
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String
-  properties    Property[]
-  tenants       Tenant[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id         String     @id @default(cuid())
+  name       String?
+  email      String     @unique
+  password   String
+  // A user can own many properties and manage many tenants.
+  properties Property[]
+  tenants    Tenant[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
+///
+/// Property Model
+///
 model Property {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String
   bedrooms    Int
@@ -29,34 +38,93 @@ model Property {
   city        String
   state       String
   zipCode     String
+  // Array of image URLs (ensure your database supports string arrays or adjust accordingly)
   images      String[]
+  // A property may have multiple tenants and expense records.
   tenants     Tenant[]
-  owner       User      @relation(fields: [ownerId], references: [id])
+  expenses    Expense[]
+  // Each property belongs to a single user (the owner).
+  owner       User       @relation(fields: [ownerId], references: [id])
   ownerId     String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([ownerId])
 }
 
+///
+/// Tenant Model
+///
 model Tenant {
   id         String           @id @default(cuid())
   name       String
   email      String           @unique
   phone      String
+  // Each tenant is associated with one property.
   property   Property         @relation(fields: [propertyId], references: [id])
   propertyId String
+  // Each tenant is also associated with the owner user.
   owner      User             @relation(fields: [ownerId], references: [id])
   ownerId    String
-  documents  TenantDocument[] // New relation: tenant can have multiple documents.
+  // A tenant can have multiple related documents.
+  documents  TenantDocument[]
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
+
+  @@index([propertyId])
+  @@index([ownerId])
 }
 
+///
+/// TenantDocument Model
+///
 model TenantDocument {
   id           String    @id @default(cuid())
+  // Each document is linked to one tenant.
   tenant       Tenant    @relation(fields: [tenantId], references: [id])
   tenantId     String
-  url          String    // URL of the uploaded document
+  // URL for the uploaded document (e.g. a lease, application, etc.)
+  url          String
   documentType String?   // e.g., "lease", "rentalApplication", etc.
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([tenantId])
+}
+
+///
+/// Expense Model
+///
+/// This model is used as a “spreadsheet” for each property where the user
+/// can track expenses, rental income, taxes, insurance, etc.
+///
+model Expense {
+  id          String      @id @default(cuid())
+  // Each expense record is attached to a specific property.
+  property    Property    @relation(fields: [propertyId], references: [id])
+  propertyId  String
+  // Type of record – an expense or an income.
+  type        ExpenseType 
+  // An optional category, e.g., "Maintenance", "Tax", "Insurance", etc.
+  category    String?
+  // The monetary amount (positive number)
+  amount      Float
+  // The date of the expense/income record.
+  date        DateTime
+  // A free-form description or note.
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([propertyId])
+}
+
+///
+/// ExpenseType Enum
+///
+/// This restricts the type field to either EXPENSE or INCOME.
+///
+enum ExpenseType {
+  EXPENSE
+  INCOME
 }

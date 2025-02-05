@@ -30,6 +30,10 @@ export default function DashboardContent({ user }: DashboardContentProps) {
           <Link href="/dashboard/tenants/new">
             <Button variant="outline">Add Tenant</Button>
           </Link>
+          {/* Link to the Spreadsheet Dashboard */}
+          <Link href="/dashboard/spreadsheet">
+            <Button variant="outline">Spreadsheet</Button>
+          </Link>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -80,7 +84,6 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                       </div>
                     )}
                     <div className="mt-2 flex gap-2">
-                      {/* The Edit button is wrapped in its own Link and stops propagation */}
                       <Link href={`/dashboard/properties/${property.id}/edit`}>
                         <Button
                           variant="outline"
@@ -90,7 +93,6 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                           Edit
                         </Button>
                       </Link>
-                      {/* You can add a delete button here if desired */}
                     </div>
                   </div>
                 );
