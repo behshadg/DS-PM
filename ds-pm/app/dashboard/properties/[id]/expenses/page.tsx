@@ -1,6 +1,6 @@
 // app/dashboard/properties/[id]/expenses/page.tsx
 
-import ExpenseSpreadsheet from "components/ExpenseSpreadsheetAG";
+import ExpenseSpreadsheet from "components/ExpenseSpreadsheet";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { notFound, redirect } from "next/navigation";

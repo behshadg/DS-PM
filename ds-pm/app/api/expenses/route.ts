@@ -1,18 +1,17 @@
-// app/api/expenses/route.ts
-
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { createExpense } from "@/actions/expense";
 
-// GET: Fetch expenses for a given property.
+const CUID_REGEX = /^c[^\s-]{8,}$/i;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const propertyId = searchParams.get("propertyId");
-  if (!propertyId) {
-    return NextResponse.json({ error: "Missing propertyId" }, { status: 400 });
+  if (!propertyId || !CUID_REGEX.test(propertyId)) {
+    return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });
   }
 
-  // Ensure the user is authenticated.
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,35 +32,28 @@ export async function GET(request: Request) {
   }
 }
 
-// POST: Create a new expense.
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const body = await request.json();
-    const { date, category, type, amount, description, propertyId } = body;
+    
+    // Add direct UUID validation
+    if (!body.propertyId || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.propertyId)) {
+      return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });
+    }
 
-    if (!propertyId) {
+    const result = await createExpense(body);
+    
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Missing propertyId" },
+        { error: result.error || "Unknown error" }, 
         { status: 400 }
       );
     }
 
-    const expense = await prisma.expense.create({
-      data: {
-        date: new Date(date),
-        category,
-        type,
-        amount: parseFloat(amount),
-        description,
-        property: { connect: { id: propertyId } },
-      },
-    });
-    return NextResponse.json(expense, { status: 201 });
+    return NextResponse.json(result.expense, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -71,7 +63,6 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH: Update an existing expense.
 export async function PATCH(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
@@ -108,7 +99,6 @@ export async function PATCH(request: Request) {
   }
 }
 
-// DELETE: Remove an expense.
 export async function DELETE(request: Request) {
   const user = await getCurrentUser();
   if (!user) {

@@ -4,6 +4,33 @@
 /* @import '~ag-grid-community/styles/ag-grid.css'; */
 @import '~ag-grid-community/styles/ag-theme-alpine.css';
 
+/* Custom row highlighting */
+.rdg-light .rdg-row.bg-yellow-50 {
+  background-color: #fefce8 !important;
+}
+
+/* Cell padding and borders */
+.rdg-light .rdg-cell {
+  padding: 8px 12px;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Header styling */
+.rdg-light .rdg-header-row {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+/* Input styling */
+.rdg-light input,
+.rdg-light select {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;

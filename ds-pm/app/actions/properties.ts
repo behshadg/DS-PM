@@ -3,46 +3,65 @@
 import prisma from "../lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { PropertyUpdateSchema } from "@/lib/schema";
+import type { Property } from "@prisma/client"; // Add explicit type import
 
-export async function updateProperty(data: any) {
+export async function updateProperty(data: unknown) { // Use unknown instead of any
   try {
-    // Get the current user (throws if not authenticated)
     const user = await getCurrentUser();
-    if (!user) throw new Error("Authentication required");
-
-    // Ensure the update payload includes an id
-    if (!data.id) {
-      throw new Error("Property id is required for update");
-    }
-
-    // Validate the data with your update schema (which includes 'id')
     const validatedData = PropertyUpdateSchema.parse(data);
-
-    // Check that the property exists and belongs to the current user.
-    const existingProperty = await prisma.property.findFirst({
+    
+    // More explicit type casting
+    const existingProperty = await prisma.property.findUnique({
       where: {
         id: validatedData.id,
         ownerId: user.id,
       },
     });
+
     if (!existingProperty) {
       throw new Error("Property not found or unauthorized");
     }
 
-    // Remove the id from the data to update (since it's used only for lookup)
     const { id, ...updateData } = validatedData;
-
-    // Update the property.
+    
     const updatedProperty = await prisma.property.update({
       where: { id },
       data: updateData,
     });
 
-    return { success: true, property: updatedProperty };
+    return { success: true, property: updatedProperty satisfies Property };
   } catch (error) {
     console.error("Property update failed:", error);
     return {
+      success: false,
       error: error instanceof Error ? error.message : "Failed to update property",
+    };
+  }
+}
+
+export async function deleteProperty(propertyId: string) {
+  try {
+    const user = await getCurrentUser();
+    
+    // Verify ownership before deletion
+    const existingProperty = await prisma.property.findUnique({
+      where: { id: propertyId, ownerId: user.id },
+    });
+
+    if (!existingProperty) {
+      throw new Error("Property not found or unauthorized");
+    }
+
+    const deletedProperty = await prisma.property.delete({
+      where: { id: propertyId },
+    });
+
+    return { success: true, property: deletedProperty satisfies Property };
+  } catch (error) {
+    console.error("Property deletion failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete property",
     };
   }
 }
