@@ -6,10 +6,11 @@ import prisma from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export default async function ExpensesPage({ params }: PageProps) {
+export default async function ExpensesPage(props: PageProps) {
+  const params = await props.params;
   // Get the currently logged in user
   const user = await getCurrentUser();
   if (!user) {

@@ -5,11 +5,12 @@ import ExpenseSpreadsheet from "components/ExpenseSpreadsheet";
 
 const CUID_REGEX = /^c[^\s-]{8,}$/i;
 
-export default async function PropertySpreadsheetPage({
-  params,
-}: {
-  params: { propertyId: string };
-}) {
+export default async function PropertySpreadsheetPage(
+  props: {
+    params: Promise<{ propertyId: string }>;
+  }
+) {
+  const params = await props.params;
   const propertyId = params?.propertyId;
 
   if (!propertyId || !CUID_REGEX.test(propertyId)) {
