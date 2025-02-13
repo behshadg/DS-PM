@@ -1,6 +1,6 @@
 'use server'
 import prisma from '../lib/db'
-import { getCurrentUser } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/domainUser';
 import { TenantSchema } from '@/lib/schema'
 
 export async function createTenant(data: any) {

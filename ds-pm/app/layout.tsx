@@ -1,28 +1,26 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
-import { SonnerToaster } from 'components/ui/sonner'
+// app/layout.tsx
+import './globals.css';
+import { ClerkProvider } from '@clerk/nextjs';
 
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: 'Property Manager',
-  description: 'Manage your properties efficiently',
-}
+export const metadata = {
+  title: 'Property Management',
+  description: 'A property management system',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <div className="min-h-screen bg-background font-sans antialiased">
+    <html lang="en">
+      <body>
+        <ClerkProvider
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
+        >
           {children}
-          <SonnerToaster />
-        </div>
+        </ClerkProvider>
       </body>
     </html>
-  )
+  );
 }

@@ -1,6 +1,8 @@
+// components/file-upload.tsx
+
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "./ui/button";
 import Image from 'next/image'
@@ -15,19 +17,32 @@ export function FileUpload({ onUpload, onRemove, initialFiles = [] }: FileUpload
   const [files, setFiles] = useState<string[]>(initialFiles)
   const [isUploading, setIsUploading] = useState(false)
 
+  // Sync initialFiles with internal state
+  useEffect(() => {
+    setFiles(initialFiles)
+  }, [initialFiles])
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     try {
       setIsUploading(true)
-      // Add your upload logic here (e.g., to Cloudinary)
       const newUrls = acceptedFiles.map(file => URL.createObjectURL(file))
-      setFiles(prev => [...prev, ...newUrls])
-      onUpload([...files, ...newUrls])
+      const updatedFiles = [...files, ...newUrls]
+      setFiles(updatedFiles)
+      onUpload(updatedFiles) // Send all current files including new ones
     } catch (error) {
       console.error('Upload failed:', error)
     } finally {
       setIsUploading(false)
     }
   }, [files, onUpload])
+
+  const handleRemove = (url: string) => {
+    const updatedFiles = files.filter(file => file !== url)
+    setFiles(updatedFiles)
+    onRemove(url)
+    onUpload(updatedFiles) // Notify parent of updated files array
+    URL.revokeObjectURL(url)
+  }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -36,12 +51,6 @@ export function FileUpload({ onUpload, onRemove, initialFiles = [] }: FileUpload
     },
     maxSize: 5 * 1024 * 1024 // 5MB
   })
-
-  const handleRemove = (url: string) => {
-    setFiles(files.filter(file => file !== url))
-    onRemove(url)
-    URL.revokeObjectURL(url)
-  }
 
   return (
     <div className="space-y-2">
@@ -53,33 +62,37 @@ export function FileUpload({ onUpload, onRemove, initialFiles = [] }: FileUpload
       >
         <input {...getInputProps()} />
         <p className="text-muted-foreground">
-          {isDragActive ? "Drop images here" : "Drag & drop property images"}
+          {isDragActive ? "Drop images here" : "Drag & drop property images (optional)"}
         </p>
         <Button type="button" variant="outline" className="mt-2">
           Browse Files
         </Button>
       </div>
       
-      <div className="grid grid-cols-3 gap-2">
-        {files.map((url) => (
-          <div key={url} className="relative group">
-            <Image
-              src={url}
-              alt="Property image"
-              className="h-24 w-full object-cover rounded"
-              width={200}
-              height={200}
-            />
-            <button
-              type="button"
-              onClick={() => handleRemove(url)}
-              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
+      {files.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {files.map((url) => (
+            <div key={url} className="relative group">
+              <Image
+                src={url}
+                alt="Property image preview"
+                className="h-24 w-full object-cover rounded"
+                width={200}
+                height={200}
+                // Add this if using blob URLs
+                unoptimized={url.startsWith('blob:')}
+              />
+              <button
+                type="button"
+                onClick={() => handleRemove(url)}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

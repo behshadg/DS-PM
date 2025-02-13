@@ -2,9 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PropertySchema } from "@/lib/schema";
-import { createProperty } from "@/actions/properties";
 
+import { createProperty } from "@/actions/properties";
 import { Form } from "components/ui/form";
 import { Input } from "components/ui/input";
 import { Button } from "components/ui/button";
@@ -13,6 +12,7 @@ import { FileUpload } from "components/file-upload";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PropertySchema } from "@/lib/schema";
 
 interface PropertyFormProps {
   onSuccess?: () => void;
@@ -35,12 +35,10 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
       city: "",
       state: "",
       zipCode: "",
-      images: [] as string[],
+      images: [],
     },
   });
 
-  // When files are uploaded, the FileUpload component returns blob URLs.
-  // We simply store those URLs now and later convert them to base64 before uploading.
   const handleImageUpload = (urls: string[]) => {
     form.setValue("images", urls, { shouldValidate: true });
   };
@@ -51,7 +49,6 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
     form.setValue("images", newImages, { shouldValidate: true });
   };
 
-  // Helper function to convert a blob URL to a base64 data URL.
   async function convertBlobUrlToBase64(url: string): Promise<string> {
     const response = await fetch(url);
     const blob = await response.blob();
@@ -69,46 +66,43 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
     const toastId = toast.loading("Creating property...");
 
     try {
-      // For each image, if it's a blob URL, convert it to a base64 string
-      const uploadedUrls = await Promise.all(
-        data.images.map(async (url: string) => {
-          if (url.startsWith("blob:")) {
-            const base64Image = await convertBlobUrlToBase64(url);
-            const response = await fetch("/api/upload", {
-              method: "POST",
-              body: JSON.stringify({ image: base64Image }),
-              headers: { "Content-Type": "application/json" },
-            });
-            const result = await response.json();
-            if (!response.ok)
-              throw new Error(result.error || "Image upload failed");
-            return result.url;
-          }
-          return url;
-        })
-      );
+      const imagesToProcess = data.images || [];
 
-      // Call your createProperty action.
-      const result = await createProperty({ ...data, images: uploadedUrls });
-      // Convert the returned result into plain JSON (this strips out functions)
-      const plainResult = JSON.parse(JSON.stringify(result));
+      // Process images only if there are any
+      const uploadedUrls = imagesToProcess.length > 0 
+        ? await Promise.all(
+            imagesToProcess.map(async (url: string) => {
+              if (url.startsWith("blob:")) {
+                const base64Image = await convertBlobUrlToBase64(url);
+                const response = await fetch("/api/upload", {
+                  method: "POST",
+                  body: JSON.stringify({ image: base64Image }),
+                  headers: { "Content-Type": "application/json" },
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || "Image upload failed");
+                return result.url;
+              }
+              return url;
+            })
+          )
+        : [];
 
-      if (plainResult?.error) {
-        throw new Error(plainResult.error);
-      }
+      const result = await createProperty({ 
+        ...data,
+        images: uploadedUrls,
+        price: Number(data.price),
+        bedrooms: Number(data.bedrooms),
+        bathrooms: Number(data.bathrooms),
+      });
+
+      if (!result.success) throw new Error(result.error);
 
       toast.success("Property created successfully", { id: toastId });
-      form.reset();
-
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        router.refresh();
-        router.push("/dashboard/properties");
-      }
+      router.push("/dashboard/properties");
+      router.refresh();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to create property";
+      const message = err instanceof Error ? err.message : "Failed to create property";
       setFormError(message);
       toast.error(message, { id: toastId });
     } finally {
@@ -128,6 +122,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             Title
           </label>
           <Input id="title" placeholder="Modern Apartment" {...form.register("title")} />
+          {form.formState.errors.title && (
+            <p className="text-red-500 text-sm">{form.formState.errors.title.message}</p>
+          )}
         </div>
 
         <div>
@@ -135,6 +132,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             Address
           </label>
           <Input id="address" placeholder="123 Main St" {...form.register("address")} />
+          {form.formState.errors.address && (
+            <p className="text-red-500 text-sm">{form.formState.errors.address.message}</p>
+          )}
         </div>
 
         <div>
@@ -142,6 +142,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             City
           </label>
           <Input id="city" placeholder="New York" {...form.register("city")} />
+          {form.formState.errors.city && (
+            <p className="text-red-500 text-sm">{form.formState.errors.city.message}</p>
+          )}
         </div>
 
         <div>
@@ -149,6 +152,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             State
           </label>
           <Input id="state" placeholder="NY" maxLength={2} {...form.register("state")} />
+          {form.formState.errors.state && (
+            <p className="text-red-500 text-sm">{form.formState.errors.state.message}</p>
+          )}
         </div>
 
         <div>
@@ -156,6 +162,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             Zip Code
           </label>
           <Input id="zipCode" placeholder="10001" {...form.register("zipCode")} />
+          {form.formState.errors.zipCode && (
+            <p className="text-red-500 text-sm">{form.formState.errors.zipCode.message}</p>
+          )}
         </div>
 
         <div>
@@ -169,6 +178,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             min={1}
             {...form.register("bedrooms", { valueAsNumber: true })}
           />
+          {form.formState.errors.bedrooms && (
+            <p className="text-red-500 text-sm">{form.formState.errors.bedrooms.message}</p>
+          )}
         </div>
 
         <div>
@@ -182,6 +194,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             min={1}
             {...form.register("bathrooms", { valueAsNumber: true })}
           />
+          {form.formState.errors.bathrooms && (
+            <p className="text-red-500 text-sm">{form.formState.errors.bathrooms.message}</p>
+          )}
         </div>
 
         <div>
@@ -195,6 +210,9 @@ export function PropertyForm({ onSuccess }: PropertyFormProps) {
             min={0}
             {...form.register("price", { valueAsNumber: true })}
           />
+          {form.formState.errors.price && (
+            <p className="text-red-500 text-sm">{form.formState.errors.price.message}</p>
+          )}
         </div>
       </div>
 

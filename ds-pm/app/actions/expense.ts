@@ -1,7 +1,8 @@
+// app/actions/expense.ts
 'use server'
 
 import prisma from "../lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/domainUser";
 import { z } from "zod";
 
 const CUID_REGEX = /^c[^\s-]{8,}$/i;
@@ -26,6 +27,8 @@ const ExpenseUpdateSchema = ExpenseCreateSchema.extend({
 export async function createExpense(data: unknown) {
   try {
     const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+
     const validatedData = ExpenseCreateSchema.parse(data);
 
     const property = await prisma.property.findUnique({
@@ -45,6 +48,8 @@ export async function createExpense(data: unknown) {
 export async function updateExpense(data: unknown) {
   try {
     const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+
     const validatedData = ExpenseUpdateSchema.parse(data);
 
     const existingExpense = await prisma.expense.findFirst({
@@ -65,13 +70,11 @@ export async function updateExpense(data: unknown) {
   }
 }
 
-// Keep deleteExpense and getExpenses functions as original
-
 export async function deleteExpense(expenseId: string) {
   try {
     const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
 
-    // Verify ownership before deletion
     const existingExpense = await prisma.expense.findFirst({
       where: {
         id: expenseId,
@@ -101,7 +104,6 @@ export async function deleteExpense(expenseId: string) {
 
 export async function getExpenses(propertyId: string) {
   try {
-    // Validate input before database call
     if (!CUID_REGEX.test(propertyId)) {
       throw new Error("Invalid property ID format");
     }

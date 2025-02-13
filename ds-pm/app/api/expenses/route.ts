@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from '@/lib/domainUser';
 import { createExpense } from "@/actions/expense";
 
 const CUID_REGEX = /^c[^\s-]{8,}$/i;

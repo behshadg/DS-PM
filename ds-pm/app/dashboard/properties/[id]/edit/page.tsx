@@ -1,6 +1,6 @@
 // /app/dashboard/properties/[id]/edit/page.tsx
 import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from '@/lib/domainUser';
 import prisma from "@/lib/db";
 import EditPropertyForm from "components/EditPropertyForm";
 

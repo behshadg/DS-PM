@@ -5,7 +5,7 @@ import { DataTable } from "components/data-table"
 import { columns } from "./columns"
 import { Button } from "components/ui/button"
 import Link from "next/link"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser } from '@/lib/domainUser';
 import prisma from "@/lib/db"
 export default async function TenantsPage() {
   const user = await getCurrentUser()

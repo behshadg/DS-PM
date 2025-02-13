@@ -1,7 +1,7 @@
 // app/api/properties/my/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from '@/lib/domainUser';
 
 export async function GET() {
   const user = await getCurrentUser();

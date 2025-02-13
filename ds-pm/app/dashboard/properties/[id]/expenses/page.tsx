@@ -1,7 +1,6 @@
 // app/dashboard/properties/[id]/expenses/page.tsx
-
 import ExpenseSpreadsheet from "components/ExpenseSpreadsheet";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/domainUser";
 import prisma from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 
@@ -11,14 +10,11 @@ interface PageProps {
 
 export default async function ExpensesPage(props: PageProps) {
   const params = await props.params;
-  // Get the currently logged in user
   const user = await getCurrentUser();
   if (!user) {
-    // Optionally, redirect to login if user is not authenticated
     redirect("/login");
   }
 
-  // Verify the property belongs to the user
   const property = await prisma.property.findFirst({
     where: { id: params.id, ownerId: user.id },
   });

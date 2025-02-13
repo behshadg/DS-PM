@@ -29,11 +29,6 @@ function DashboardNav() {
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center space-x-4">
-          <form action={logout}>
-            <Button variant="ghost">Sign Out</Button>
-          </form>
-        </div>
       </div>
     </header>
   )

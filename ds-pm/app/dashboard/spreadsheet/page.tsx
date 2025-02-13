@@ -1,6 +1,6 @@
 // app/dashboard/spreadsheet/page.tsx
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from '@/lib/domainUser';
 import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 

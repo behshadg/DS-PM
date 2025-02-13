@@ -1,4 +1,3 @@
-// components/DashboardContent.tsx
 "use client";
 
 import Link from "next/link";
@@ -30,7 +29,6 @@ export default function DashboardContent({ user }: DashboardContentProps) {
           <Link href="/dashboard/tenants/new">
             <Button variant="outline">Add Tenant</Button>
           </Link>
-          {/* Link to the Spreadsheet Dashboard */}
           <Link href="/dashboard/spreadsheet">
             <Button variant="outline">Spreadsheet</Button>
           </Link>
@@ -40,13 +38,13 @@ export default function DashboardContent({ user }: DashboardContentProps) {
         {/* Properties Section */}
         <div className="bg-card rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Your Properties</h2>
-          {user.properties.length === 0 ? (
+          {user.properties && user.properties.length === 0 ? (
             <div className="text-muted-foreground">
               No properties yet. Add your first property to get started.
             </div>
           ) : (
             <div className="space-y-4">
-              {user.properties.map((property) => {
+              {user.properties?.map((property) => {
                 const tenants = property.tenants ?? [];
                 return (
                   <div
@@ -103,13 +101,13 @@ export default function DashboardContent({ user }: DashboardContentProps) {
         {/* Tenants Section */}
         <div className="bg-card rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Active Tenants</h2>
-          {user.tenants.length === 0 ? (
+          {user.tenants && user.tenants.length === 0 ? (
             <div className="text-muted-foreground">
               No tenants yet. Add tenants to your properties.
             </div>
           ) : (
             <div className="space-y-4">
-              {user.tenants.map((tenant) => (
+              {user.tenants?.map((tenant) => (
                 <div
                   key={tenant.id}
                   className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
