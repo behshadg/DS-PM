@@ -48,7 +48,7 @@ export function DocumentUpload({ onUpload, onRemove, initialFiles = [] }: Docume
       'application/msword': ['.doc', '.docx'],
       'application/vnd.ms-excel': ['.xls', '.xlsx'],
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024, 
   });
 
   return (
