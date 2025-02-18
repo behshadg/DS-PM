@@ -1,8 +1,9 @@
+// app/components/dashboard/nav.tsx
+
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from 'components/ui/button'
-import { logout } from '@/actions/auth'
 
 function DashboardNav() {
   const pathname = usePathname()

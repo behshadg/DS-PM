@@ -1,3 +1,5 @@
+// app/lib/propertySchemas.ts
+
 import { z } from "zod";
 
 export const PropertySchema = z.object({
