@@ -1,5 +1,3 @@
-// app/components/DashboardContent.tsx
-
 "use client";
 
 import Link from "next/link";
@@ -73,6 +71,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                       <span>{property.bathrooms} baths</span>
                       <span>${property.price}/mo</span>
                     </div>
+                    
                     {tenants.length > 0 && (
                       <div className="mt-2 text-sm">
                         <span className="text-muted-foreground">Tenants: </span>
@@ -83,6 +82,25 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                         ))}
                       </div>
                     )}
+
+                    {property.documents && property.documents.length > 0 && (
+                      <div className="mt-2 text-sm">
+                        <span className="text-muted-foreground">Documents: </span>
+                        {property.documents.map((doc) => (
+                          <Link
+                            key={doc.id}
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mr-2 text-primary hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {doc.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="mt-2 flex gap-2">
                       <Link href={`/dashboard/properties/${property.id}/edit`}>
                         <Button

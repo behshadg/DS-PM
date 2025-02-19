@@ -1,4 +1,4 @@
-// app/lib/domainUser.ts
+
 import { currentUser } from '@clerk/nextjs/server';
 import prisma from './db';
 
@@ -6,7 +6,7 @@ export async function getCurrentUser() {
   const clerkUser = await currentUser();
   if (!clerkUser) return null;
   
-  // Use Clerk's primary email address for lookup
+
   const email = clerkUser.primaryEmailAddress?.emailAddress;
   if (!email) return null;
   
@@ -15,7 +15,7 @@ export async function getCurrentUser() {
     include: { properties: true, tenants: true },
   });
   
-  // If no user exists, create one
+  
   if (!user) {
     user = await prisma.user.create({
       data: {

@@ -1,35 +1,23 @@
 // ds-pm/app/types/index.ts
 import { User, Property, Tenant, PropertyDocument } from "@prisma/client";
 
-// Core type definitions
 export type SafeUser = Omit<User, "password"> & {
-  properties: (PropertyWithTenants | PropertyWithDocuments)[];
+  properties: PropertyWithTenants[];
   tenants: Tenant[];
 };
 
 export type PropertyWithTenants = Property & {
   tenants: Tenant[];
   images: string[];
-};
-
-export type PropertyWithDocuments = Property & {
-  documents: PropertyDocument[];
-  images: string[];
+  documents: PropertyDocument[]; // Add documents to existing type
 };
 
 export type TenantWithProperty = Tenant & {
   property: Property | null;
 };
 
-// Extended types for full property details
-export type FullProperty = Property & {
-  tenants: Tenant[];
+export type PropertyWithDocuments = Property & {
   documents: PropertyDocument[];
   images: string[];
-};
-
-// Helper type for document management
-export type PropertyDocumentWithUrl = PropertyDocument & {
-  previewUrl?: string;
-  downloadUrl?: string;
+  tenants: Tenant[]; // Maintain tenant relationship
 };
