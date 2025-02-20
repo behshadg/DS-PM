@@ -10,7 +10,7 @@
     "postinstall": "prisma generate"
   },
   "prisma": {
-    "schema": "lib/schema.ts"
+    "schema": "prisma/schema.prisma"
   },
   "dependencies": {
     "@ag-grid-community/client-side-row-model": "^30.0.0",
