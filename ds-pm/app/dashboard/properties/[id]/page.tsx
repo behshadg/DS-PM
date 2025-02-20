@@ -5,11 +5,12 @@ import { PropertyDetails } from "components/property-details";
 import { Button } from "components/ui/button";
 import Link from "next/link";
 
-export default async function PropertyPage({ 
-  params 
-}: { 
-  params: { id: string } 
-}) {
+export default async function PropertyPage(
+  props: { 
+    params: Promise<{ id: string }> 
+  }
+) {
+  const params = await props.params;
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 

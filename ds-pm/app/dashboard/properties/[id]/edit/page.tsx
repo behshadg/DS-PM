@@ -1,39 +1,35 @@
-// /app/dashboard/properties/[id]/edit/page.tsx
-import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from '@/lib/domainUser';
+// app/dashboard/properties/[id]/edit/page.tsx
+import { getCurrentUser } from "@/lib/domainUser";
+import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
-import EditPropertyForm from "components/EditPropertyForm";
-
-interface PageProps {
-  params: { id: string }; // This is fine because `await`ing a plain object returns it.
-}
-
-export default async function EditPropertyPage({ params }: PageProps) {
-  // Await the params (if they are a promise, this will resolve them;
-  // if they’re already an object, this works fine)
-  const resolvedParams = await params;
-
-  if (!resolvedParams || !resolvedParams.id) {
-    return notFound();
-  }
-
+import { PropertyForm } from "components/property-form";
+export default async function EditPropertyPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
-  const property = await prisma.property.findFirst({
-    where: { id: resolvedParams.id, ownerId: user.id },
+  const property = await prisma.property.findUnique({
+    where: { id: params.id, ownerId: user.id },
+    include: {
+      documents: true,
+    },
   });
 
-  if (!property) {
-    return notFound();
-  }
+  if (!property) redirect("/dashboard/properties");
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Edit Property</h1>
-      <EditPropertyForm initialData={JSON.parse(JSON.stringify(property))} />
+      <PropertyForm
+        property={{
+          ...property,
+          images: property.images || [],
+          documents: property.documents.map(d => d.url) || [],
+        }}
+      />
     </div>
   );
 }
