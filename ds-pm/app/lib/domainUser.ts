@@ -3,35 +3,46 @@ import prisma from './db';
 import { SafeUser } from '@/types';
 
 export async function getCurrentUser(): Promise<SafeUser | null> {
-  const clerkUser = await currentUser();
-  if (!clerkUser) return null;
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      console.log('No Clerk user found');
+      return null;
+    }
 
-  const email = clerkUser.primaryEmailAddress?.emailAddress;
-  if (!email) return null;
+    const email = clerkUser.primaryEmailAddress?.emailAddress;
+    if (!email) {
+      console.log('No email found for Clerk user');
+      return null;
+    }
 
-  let user = await prisma.user.findFirst({
-    where: { email },
-    include: {
-      properties: { include: { tenants: true, documents: true } },
-      tenants: { include: { property: true } },
-    },
-  });
-
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        clerkId: clerkUser.id,
-        email,
-        name:
-          clerkUser.firstName || clerkUser.lastName
-            ? `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim()
-            : null,
-      },
+    let user = await prisma.user.findFirst({
+      where: { email },
       include: {
         properties: { include: { tenants: true, documents: true } },
         tenants: { include: { property: true } },
       },
     });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          clerkId: clerkUser.id,
+          email,
+          name:
+            clerkUser.firstName || clerkUser.lastName
+              ? `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim()
+              : null,
+        },
+        include: {
+          properties: { include: { tenants: true, documents: true } },
+          tenants: { include: { property: true } },
+        },
+      });
+    }
+    return user;
+  } catch (error) {
+    console.error('getCurrentUser error:', error);
+    return null;
   }
-  return user;
 }
