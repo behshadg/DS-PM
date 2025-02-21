@@ -1,3 +1,5 @@
+// /app/dashboard/page.tsx
+
 import DashboardContent from 'components/DashboardContent';
 import { getCurrentUser } from '@/lib/domainUser';
 
