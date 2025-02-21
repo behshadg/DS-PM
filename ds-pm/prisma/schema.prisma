@@ -7,24 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-///
-/// Domain User Model (managed by Clerk)
-///
 model User {
-  id       String   @id @default(cuid())
-  clerkId  String?  // Optional: stores Clerk’s user ID for syncing
-  name     String?
-  email    String   @unique
-  // Removed password – Clerk handles authentication
+  id         String     @id @default(cuid())
+  clerkId    String?    // Optional: stores Clerk’s user ID for syncing
+  name       String?
+  email      String     @unique
   properties Property[]
   tenants    Tenant[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
-///
-/// Other Domain Models
-///
 model Property {
   id          String            @id @default(cuid())
   title       String
@@ -36,7 +29,6 @@ model Property {
   city        String
   state       String
   zipCode     String
-  // NEW: optional images field (array of strings)
   images      String[]          @default([])
   owner       User              @relation(fields: [ownerId], references: [id])
   ownerId     String
@@ -95,7 +87,7 @@ model Expense {
   id          String      @id @default(cuid())
   property    Property    @relation(fields: [propertyId], references: [id])
   propertyId  String
-  type        ExpenseType 
+  type        ExpenseType
   category    String?
   amount      Float
   date        DateTime

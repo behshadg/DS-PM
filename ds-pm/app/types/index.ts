@@ -1,15 +1,14 @@
-// ds-pm/app/types/index.ts
-import { User, Property, Tenant, PropertyDocument } from "@prisma/client";
+import { User, Property, Tenant, PropertyDocument } from '@prisma/client';
 
-export type SafeUser = Omit<User, "password"> & {
+export type SafeUser = Omit<User, 'password'> & {
   properties: PropertyWithTenants[];
-  tenants: Tenant[];
+  tenants: TenantWithProperty[];
 };
 
 export type PropertyWithTenants = Property & {
   tenants: Tenant[];
   images: string[];
-  documents: PropertyDocument[]; // Add documents to existing type
+  documents: PropertyDocument[];
 };
 
 export type TenantWithProperty = Tenant & {
@@ -19,5 +18,5 @@ export type TenantWithProperty = Tenant & {
 export type PropertyWithDocuments = Property & {
   documents: PropertyDocument[];
   images: string[];
-  tenants: Tenant[]; // Maintain tenant relationship
+  tenants: Tenant[];
 };

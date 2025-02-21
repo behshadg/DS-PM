@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/lib/domainUser'; // Adjust path if needed
+import { getCurrentUser } from '@/lib/domainUser';
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -17,15 +17,14 @@ export default async function Home() {
     );
   }
 
-  // Redirect authenticated users to /dashboard
   return (
     <div className="h-screen flex items-center justify-center">
       <p className="text-xl">
-        Redirecting to{' '}
+        Welcome back, {user.name || user.email}! Go to your{' '}
         <a href="/dashboard" className="text-blue-500">
           dashboard
         </a>
-        ...
+        .
       </p>
     </div>
   );

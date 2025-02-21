@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/login(.*)',
   '/sign-up(.*)',
+  '/dashboard', // Confirmed included as per your note
   '/api(.*)',
   '/_not-found',
 ]);
@@ -16,7 +17,6 @@ export default clerkMiddleware(async (auth, req) => {
   console.log('User ID:', userId);
 
   if (isPublicRoute(req)) {
-    // Redirect signed-in users from /login to home
     if (userId && req.nextUrl.pathname.startsWith('/login')) {
       return NextResponse.redirect(new URL('/', req.url));
     }
