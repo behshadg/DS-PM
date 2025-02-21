@@ -5,29 +5,34 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/login(.*)',
   '/sign-up(.*)',
-  '/dashboard', // Confirmed included as per your note
+  '/dashboard',
   '/api(.*)',
   '/_not-found',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+  try {
+    const { userId } = await auth();
 
-  console.log('Request URL:', req.url);
-  console.log('User ID:', userId);
+    console.log('Request URL:', req.url);
+    console.log('User ID:', userId);
 
-  if (isPublicRoute(req)) {
-    if (userId && req.nextUrl.pathname.startsWith('/login')) {
-      return NextResponse.redirect(new URL('/', req.url));
+    if (isPublicRoute(req)) {
+      if (userId && req.nextUrl.pathname.startsWith('/login')) {
+        return NextResponse.redirect(new URL('/dashboard', req.url)); // Direct to dashboard
+      }
+      return NextResponse.next();
     }
+
+    if (!userId) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error('Middleware error:', error);
     return NextResponse.next();
   }
-
-  if (!userId) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
-  return NextResponse.next();
 });
 
 export const config = {
