@@ -1,13 +1,12 @@
-// middleware.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
-  '/sign-in(.*)',
+  '/login(.*)',
   '/sign-up(.*)',
   '/api(.*)',
-  '/_not-found'
+  '/_not-found',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -15,16 +14,14 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  // Handle authentication for protected routes
   const { userId } = await auth();
-  
   if (!userId) {
-    return await (await auth()).redirectToSignIn({ returnBackUrl: req.url });
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)']
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 };
