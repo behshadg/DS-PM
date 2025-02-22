@@ -1,12 +1,14 @@
-import { currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import prisma from './db';
 import { SafeUser } from '@/types';
 
 export async function getCurrentUser(): Promise<SafeUser | null> {
   try {
     const clerkUser = await currentUser();
-    if (!clerkUser) {
-      console.log('No Clerk user found');
+    const { userId } = await auth(); // Await auth() for server-side check
+
+    if (!userId || !clerkUser) {
+      console.log('No authenticated user');
       return null;
     }
 

@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/lib/domainUser';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-
+console.log('User in dashboard:', user);
   return (
     <div>
       {user ? (
