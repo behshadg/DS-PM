@@ -4,20 +4,24 @@ import { SafeUser } from '@/types';
 
 export async function getCurrentUser(): Promise<SafeUser | null> {
   try {
+    const authResult = await auth();
+    const userId = authResult.userId;
+    console.log('Auth userId:', userId);
+
+    if (!userId) {
+      console.log('No authenticated user ID from auth()');
+      return null;
+    }
+
     const clerkUser = await currentUser();
-    const { userId } = await auth(); // Await auth() for server-side check
+    console.log('Clerk user:', clerkUser ? clerkUser.id : 'null');
 
-    if (!userId || !clerkUser) {
-      console.log('No authenticated user');
+    if (!clerkUser || !clerkUser.primaryEmailAddress?.emailAddress) {
+      console.log('No Clerk user or email found');
       return null;
     }
 
-    const email = clerkUser.primaryEmailAddress?.emailAddress;
-    if (!email) {
-      console.log('No email found for Clerk user');
-      return null;
-    }
-
+    const email = clerkUser.primaryEmailAddress.emailAddress;
     let user = await prisma.user.findFirst({
       where: { email },
       include: {
@@ -42,6 +46,7 @@ export async function getCurrentUser(): Promise<SafeUser | null> {
         },
       });
     }
+    console.log('Prisma user:', user);
     return user;
   } catch (error) {
     console.error('getCurrentUser error:', error);

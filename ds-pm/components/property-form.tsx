@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createProperty, updateProperty } from "@/actions/properties";
-import { Form } from "components/ui/form";
 import { Input } from "components/ui/input";
 import { Button } from "components/ui/button";
 import { Textarea } from "components/ui/textarea";
@@ -25,35 +24,40 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const form = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: zodResolver(property ? PropertyUpdateSchema : PropertySchema),
     defaultValues: {
-      ...property,
-      id: property?.id || undefined,
-      price: property?.price || 0,
+      title: property?.title || "",
+      description: property?.description || "",
       bedrooms: property?.bedrooms || 1,
       bathrooms: property?.bathrooms || 1,
+      price: property?.price || 0,
+      address: property?.address || "",
+      city: property?.city || "",
+      state: property?.state || "",
+      zipCode: property?.zipCode || "",
       images: property?.images || [],
       documents: property?.documents?.map(d => d.url) || [],
+      id: property?.id || undefined,
     },
   });
 
   const handleImageUpload = (urls: string[]) => {
-    form.setValue("images", urls, { shouldValidate: true });
+    setValue("images", urls, { shouldValidate: true });
   };
 
   const handleImageRemove = (url: string) => {
-    const currentImages = form.getValues("images");
-    form.setValue("images", currentImages.filter(u => u !== url), { shouldValidate: true });
+    const currentImages = watch("images") || [];
+    setValue("images", currentImages.filter(u => u !== url), { shouldValidate: true });
   };
 
   const handleDocumentUpload = (urls: string[]) => {
-    form.setValue("documents", urls, { shouldValidate: true });
+    setValue("documents", urls, { shouldValidate: true });
   };
 
   const handleDocumentRemove = (url: string) => {
-    const currentDocs = form.getValues("documents");
-    form.setValue("documents", currentDocs.filter(u => u !== url), { shouldValidate: true });
+    const currentDocs = watch("documents") || [];
+    setValue("documents", currentDocs.filter(u => u !== url), { shouldValidate: true });
   };
 
   const processUploads = async (urls: string[], type: 'image' | 'document') => {
@@ -82,13 +86,12 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
     );
   };
 
-  const handleSubmit = async (data: any) => {
+  const onSubmit = async (data: any) => {
     setFormError("");
     setIsSubmitting(true);
     const toastId = toast.loading(property ? "Updating property..." : "Creating property...");
 
     try {
-      // Process images and documents in parallel
       const [uploadedImages, uploadedDocs] = await Promise.all([
         processUploads(data.images || [], 'image'),
         processUploads(data.documents || [], 'document'),
@@ -122,40 +125,104 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
   };
 
   return (
-    <Form methods={form} onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-      {/* Existing form fields */}
-      
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Title</label>
+        <Input {...register("title")} placeholder="Property Title" />
+        {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-2">Description</label>
+        <Textarea {...register("description")} placeholder="Property Description" />
+        {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">Bedrooms</label>
+          <Input
+            type="number"
+            min="1"
+            {...register("bedrooms", { valueAsNumber: true })}
+            defaultValue={1}
+          />
+          {errors.bedrooms && <p className="text-red-500 text-sm">{errors.bedrooms.message}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Bathrooms</label>
+          <Input
+            type="number"
+            min="1"
+            {...register("bathrooms", { valueAsNumber: true })}
+            defaultValue={1}
+          />
+          {errors.bathrooms && <p className="text-red-500 text-sm">{errors.bathrooms.message}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Price ($/mo)</label>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            {...register("price", { valueAsNumber: true })}
+            defaultValue={0}
+          />
+          {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-2">Address</label>
+        <Input {...register("address")} placeholder="Street Address" />
+        {errors.address && <p className="text-red-500 text-sm">{errors.address.message}</p>}
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">City</label>
+          <Input {...register("city")} placeholder="City" />
+          {errors.city && <p className="text-red-500 text-sm">{errors.city.message}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">State</label>
+          <Input {...register("state")} placeholder="State" />
+          {errors.state && <p className="text-red-500 text-sm">{errors.state.message}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Zip Code</label>
+          <Input {...register("zipCode")} placeholder="Zip Code" />
+          {errors.zipCode && <p className="text-red-500 text-sm">{errors.zipCode.message}</p>}
+        </div>
+      </div>
       <div>
         <label className="block text-sm font-medium mb-2">Property Images</label>
         <FileUpload
           onUpload={handleImageUpload}
           onRemove={handleImageRemove}
-          initialFiles={form.watch("images")}
+          initialFiles={watch("images")}
           accept="image/*"
           maxSize={10 * 1024 * 1024}
         />
       </div>
-
       <div>
         <label className="block text-sm font-medium mb-2">Property Documents</label>
         <DocumentUpload
           onUpload={handleDocumentUpload}
           onRemove={handleDocumentRemove}
-          initialFiles={form.watch("documents")}
+          initialFiles={watch("documents")}
           maxSize={25 * 1024 * 1024}
         />
       </div>
-
       {formError && (
         <div className="p-3 bg-red-100 text-red-700 rounded-md">{formError}</div>
       )}
-
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting 
-          ? (property ? "Updating..." : "Creating...")
-          : (property ? "Update Property" : "Create Property")}
+        {isSubmitting
+          ? property
+            ? "Updating..."
+            : "Creating..."
+          : property
+          ? "Update Property"
+          : "Create Property"}
       </Button>
-    </Form>
+    </form>
   );
 }
 
