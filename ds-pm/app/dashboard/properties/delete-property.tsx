@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "components/ui/button";
-import { deleteProperty } from "@/actions/properties"; // Fix import path
+import { deleteProperty } from "@/actions/properties"; 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
