@@ -17,9 +17,9 @@ export default async function Home() {
         <p className="text-xl">
           Welcome to Property Management. Please{' '}
           <a href="/login" className="text-blue-500">
-            log in
+            click me to log in
           </a>
-          .
+           
         </p>
       )}
     </div>
