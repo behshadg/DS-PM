@@ -24,6 +24,8 @@ export const config = {
   matcher: [
     '/((?!.*\\..*|_next).*)', // Match all except static files and _next
     '/',
+    '/dashboard/(.*)',
+    '/dashboard/spreadsheet/(.*)',
     '/(api|trpc)(.*)',
   ],
 };
