@@ -1,31 +1,41 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+// middleware.ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/login(.*)',
+  '/signup(.*)',
+  '/api(.*)',
+  '/_not-found',
+  '/dashboard/spreadsheet(.*)'
+]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth(); // Await auth() for Clerk v5+
+  // 1. Handle public routes first
+  if (isPublicRoute(req)) {
+    console.log('Allowing public access to:', req.nextUrl.pathname);
+    return;
+  }
 
-  console.log('Middleware - Request URL:', req.url);
-  console.log('Middleware - User ID:', userId);
+  // 2. Handle protected routes
+  const { userId, redirectToSignIn } = await auth();
+  
+  // Redirect unauthenticated users
+  if (!userId) {
+    return redirectToSignIn();
+  }
 
-  // Allow all routes to proceed; redirect /login if authenticated
+  // 3. Redirect authenticated users from auth pages
   if (userId && req.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    console.log('Redirecting authenticated user to dashboard');
+    return Response.redirect(new URL('/dashboard', req.url));
   }
-
-  // Redirect unauthenticated users to /login except for public routes
-  if (!userId && !req.nextUrl.pathname.startsWith('/login') && !req.nextUrl.pathname.startsWith('/signup')) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
-  return NextResponse.next();
-});
+}, { debug: process.env.NODE_ENV === 'development' });
 
 export const config = {
   matcher: [
-    '/((?!.*\\..*|_next).*)', // Match all except static files and _next
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/',
-    '/dashboard/(.*)',
-    '/dashboard/spreadsheet/(.*)',
-    '/(api|trpc)(.*)',
-  ],
+    '/(api|trpc)(.*)'
+  ]
 };

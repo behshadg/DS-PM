@@ -1,4 +1,3 @@
-// app/dashboard/properties/[id]/edit/page.tsx
 import { getCurrentUser } from "@/lib/domainUser";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";

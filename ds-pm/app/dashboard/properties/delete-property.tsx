@@ -1,3 +1,5 @@
+// /app/dashboard/properties/delete-property.tsx
+
 "use client";
 
 import { Button } from "components/ui/button";

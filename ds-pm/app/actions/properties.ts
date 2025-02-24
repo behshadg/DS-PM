@@ -1,3 +1,5 @@
+// /app/actions/properties.ts
+
 'use server';
 
 import prisma from "../lib/db";
@@ -57,7 +59,6 @@ export async function updateProperty(data: unknown) {
 
     if (!existing) throw new Error("Property not found");
 
-    // Handle document updates
     const existingDocs = existing.documents.map(d => d.url);
     const docsToAdd = documents.filter(url => !existingDocs.includes(url));
     const docsToRemove = existingDocs.filter(url => !documents.includes(url));
@@ -77,13 +78,11 @@ export async function updateProperty(data: unknown) {
           bedrooms: Number(updateData.bedrooms),
           bathrooms: Number(updateData.bathrooms),
           documents: {
-            createMany: {
-              data: docsToAdd.map(url => ({
-                url,
-                name: url.split('/').pop() || 'Document',
-                type: getDocumentType(url),
-              })),
-            },
+            create: docsToAdd.map(url => ({
+              url,
+              name: url.split('/').pop() || 'Document',
+              type: getDocumentType(url),
+            })),
           },
         },
         include: { documents: true },
@@ -119,16 +118,16 @@ export async function deleteProperty(propertyId: string) {
     const user = await getCurrentUser();
     if (!user) throw new Error("Unauthorized");
 
-    const property = await prisma.property.findUnique({
+    // Delete related documents first
+    await prisma.propertyDocument.deleteMany({
+      where: { propertyId }
+    });
+
+    await prisma.property.delete({
       where: { id: propertyId, ownerId: user.id }
     });
 
-    if (!property) throw new Error("Property not found or unauthorized");
-
-    await prisma.property.delete({
-      where: { id: propertyId }
-    });
-
+    revalidatePath('/dashboard/properties');
     return { success: true };
   } catch (error) {
     console.error("Property deletion failed:", error);

@@ -1,21 +1,24 @@
-// app/lib/propertySchemas.ts
-
 import { z } from "zod";
 
-export const PropertySchema = z.object({
+const baseSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().default(""), // default to an empty string
+  description: z.string().min(1, "Description is required"),
+  bedrooms: z.number().min(1, "At least 1 bedroom required"),
+  bathrooms: z.number().min(1, "At least 1 bathroom required"),
+  price: z.number().min(0, "Price must be positive"),
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().length(2, "State must be 2-letter code"),
-  zipCode: z.string().min(5, "Zip code must be 5 digits"),
-  price: z.number().positive(),
-  bedrooms: z.number().int().positive(),
-  bathrooms: z.number().int().positive(),
-  images: z.array(z.string()).optional().default([]),
-  documents: z.array(z.string()).optional().default([]), // For additional document URLs
+  zipCode: z.string().min(5, "Invalid ZIP code"),
+  images: z.array(z.string().url()).min(1, "At least 1 image required"),
+  documents: z.array(z.string().url()).optional(),
 });
 
-export const PropertyUpdateSchema = PropertySchema.extend({
-  id: z.string().uuid(),
-});
+export const PropertySchema = baseSchema;
+
+export const PropertyUpdateSchema = baseSchema
+  .omit({ images: true })
+  .extend({
+    images: z.array(z.string().url()), // Allow any array, including empty
+    id: z.string(),
+  });
