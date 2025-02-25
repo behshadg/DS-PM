@@ -1,5 +1,3 @@
-// /app/actions/properties.ts
-
 'use server';
 
 import prisma from "../lib/db";
@@ -15,6 +13,11 @@ export async function createProperty(data: unknown) {
     const validatedData = PropertySchema.parse(data);
     const { documents = [], ...propertyData } = validatedData;
 
+    // Validate document URLs
+    const validDocuments = documents.filter(url => 
+      typeof url === 'string' && url.startsWith('http')
+    );
+
     const property = await prisma.property.create({
       data: {
         ...propertyData,
@@ -23,7 +26,7 @@ export async function createProperty(data: unknown) {
         bedrooms: Number(propertyData.bedrooms),
         bathrooms: Number(propertyData.bathrooms),
         documents: {
-          create: documents.map(url => ({
+          create: validDocuments.map(url => ({
             url,
             name: url.split('/').pop() || 'Document',
             type: getDocumentType(url),
@@ -60,7 +63,9 @@ export async function updateProperty(data: unknown) {
     if (!existing) throw new Error("Property not found");
 
     const existingDocs = existing.documents.map(d => d.url);
-    const docsToAdd = documents.filter(url => !existingDocs.includes(url));
+    const docsToAdd = documents
+      .filter((url): url is string => Boolean(url) && typeof url === 'string')
+      .filter(url => !existingDocs.includes(url));
     const docsToRemove = existingDocs.filter(url => !documents.includes(url));
 
     const updatedProperty = await prisma.$transaction(async (tx) => {
@@ -101,15 +106,19 @@ export async function updateProperty(data: unknown) {
 }
 
 function getDocumentType(url: string): string {
-  const extension = url.split('.').pop()?.toLowerCase();
-  switch (extension) {
-    case 'pdf': return 'PDF';
-    case 'doc':
-    case 'docx': return 'Word';
-    case 'xls':
-    case 'xlsx': return 'Excel';
-    case 'csv': return 'CSV';
-    default: return 'Document';
+  try {
+    const extension = new URL(url).pathname.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf': return 'PDF';
+      case 'doc':
+      case 'docx': return 'Word';
+      case 'xls':
+      case 'xlsx': return 'Excel';
+      case 'csv': return 'CSV';
+      default: return 'Document';
+    }
+  } catch {
+    return 'Document';
   }
 }
 
@@ -118,13 +127,19 @@ export async function deleteProperty(propertyId: string) {
     const user = await getCurrentUser();
     if (!user) throw new Error("Unauthorized");
 
+    // Verify property exists and belongs to user
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId, ownerId: user.id }
+    });
+    if (!property) throw new Error("Property not found");
+
     // Delete related documents first
     await prisma.propertyDocument.deleteMany({
       where: { propertyId }
     });
 
     await prisma.property.delete({
-      where: { id: propertyId, ownerId: user.id }
+      where: { id: propertyId }
     });
 
     revalidatePath('/dashboard/properties');

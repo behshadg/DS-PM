@@ -8,7 +8,7 @@ import { FileIcon } from "lucide-react";
 type DocumentUploadProps = {
   onUpload: (urls: string[]) => void;
   onRemove: (url: string) => void;
-  initialFiles?: string[];
+  initialFiles?: (string | null | undefined)[];
   maxSize?: number;
 };
 
@@ -18,18 +18,28 @@ export function DocumentUpload({
   initialFiles = [], 
   maxSize = 25 * 1024 * 1024 
 }: DocumentUploadProps) {
-  const [files, setFiles] = useState<string[]>(initialFiles);
+  const [files, setFiles] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    setFiles(initialFiles);
+    const validInitialFiles = initialFiles
+      .filter((url): url is string => Boolean(url) && typeof url === 'string')
+      .map(url => url.startsWith('blob:') ? url : decodeURIComponent(url));
+    setFiles(validInitialFiles);
   }, [initialFiles]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     try {
       setIsUploading(true);
-      const newUrls = acceptedFiles.map(file => URL.createObjectURL(file));
-      const updatedFiles = [...files, ...newUrls];
+      const newUrls = acceptedFiles
+        .map(file => URL.createObjectURL(file))
+        .filter(url => typeof url === 'string');
+      
+      const updatedFiles = [
+        ...files.filter(url => typeof url === 'string'),
+        ...newUrls
+      ];
+      
       setFiles(updatedFiles);
       onUpload(updatedFiles);
     } catch (error) {
@@ -44,7 +54,11 @@ export function DocumentUpload({
     setFiles(updatedFiles);
     onRemove(url);
     onUpload(updatedFiles);
-    URL.revokeObjectURL(url);
+    try {
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.warn('Failed to revoke object URL:', url);
+    }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -89,21 +103,25 @@ export function DocumentUpload({
       {files.length > 0 && (
         <div className="grid grid-cols-1 gap-2">
           {files.map((url) => (
-            <div key={url} className="flex items-center justify-between p-2 border rounded">
-              <div className="flex items-center gap-2 truncate">
-                <FileIcon className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate text-sm">{url.split('/').pop()}</span>
+            url && (
+              <div key={url} className="flex items-center justify-between p-2 border rounded">
+                <div className="flex items-center gap-2 truncate">
+                  <FileIcon className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate text-sm">
+                    {(url || '').split('/').pop() || 'Document'}
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemove(url)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  Remove
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemove(url)}
-                className="text-red-600 hover:text-red-700"
-              >
-                Remove
-              </Button>
-            </div>
+            )
           ))}
         </div>
       )}

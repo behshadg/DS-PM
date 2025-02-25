@@ -29,15 +29,17 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
     defaultValues: {
       title: property?.title || "",
       description: property?.description || "",
-      bedrooms: property?.bedrooms || 1,
-      bathrooms: property?.bathrooms || 1,
-      price: property?.price || 0,
+      bedrooms: property?.bedrooms ?? 1,
+      bathrooms: property?.bathrooms ?? 1,
+      price: property?.price ?? 0,
       address: property?.address || "",
       city: property?.city || "",
       state: property?.state || "",
       zipCode: property?.zipCode || "",
       images: property?.images || [],
-      documents: property?.documents?.map(d => d.url) || [],
+      documents: property?.documents
+        ?.map(d => d.url ? decodeURIComponent(d.url) : '')
+        .filter(url => url) || [],
       id: property?.id || undefined,
     },
   });
@@ -60,11 +62,20 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
     setValue("documents", currentDocs.filter(u => u !== url), { shouldValidate: true });
   };
 
-  const processUploads = async (urls: string[], type: 'image' | 'document') => {
-    return Promise.all(
-      urls.map(async (url) => {
-        if (!url.startsWith("blob:")) return url;
-        
+ const processUploads = async (urls: string[], type: 'image' | 'document') => {
+  return Promise.all(
+    urls.map(async (url) => {
+      // Skip processing for existing cloud URLs
+      if (url.startsWith('http') && !url.startsWith('blob:')) {
+        return url;
+      }
+      
+      if (!url.startsWith("blob:")) {
+        console.error('Invalid URL format:', url);
+        return url;
+      }
+
+      try {
         const formData = new FormData();
         const file = await convertBlobToFile(url);
         formData.append("file", file);
@@ -82,9 +93,13 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
 
         const result = await response.json();
         return result.url;
-      })
-    );
-  };
+      } catch (error) {
+        console.error('File upload error:', error);
+        return url; // Return original URL if upload fails
+      }
+    })
+  );
+};
 
   const onSubmit = async (data: any) => {
     setFormError("");
