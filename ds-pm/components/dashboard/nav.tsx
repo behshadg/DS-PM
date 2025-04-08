@@ -12,6 +12,7 @@ function DashboardNav() {
     { href: '/dashboard', label: 'Overview' },
     { href: '/dashboard/properties', label: 'Properties' },
     { href: '/dashboard/tenants', label: 'Tenants' },
+    { href: '/dashboard/documents', label: 'Documents' },
   ]
 
   return (

@@ -1,3 +1,5 @@
+// /app/lib/domainUser.tsx
+
 import { auth, currentUser } from '@clerk/nextjs/server';
 import prisma from './db';
 import { SafeUser } from '@/types';

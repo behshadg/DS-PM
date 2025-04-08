@@ -61,6 +61,10 @@ export async function POST(request: Request) {
           allowed_formats: type === 'image' 
             ? ['jpg', 'jpeg', 'png', 'webp'] 
             : ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv'],
+            use_filename: true,
+          unique_filename: false,
+          overwrite: false,
+          format: type === 'document' ? undefined : 'auto',
         },
         (error, result) => {
           if (error) reject(error);
@@ -74,6 +78,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       url: (result as any).secure_url,
       publicId: (result as any).public_id,
+      originalName: file.name
     });
   } catch (error) {
     console.error('Upload error:', error);

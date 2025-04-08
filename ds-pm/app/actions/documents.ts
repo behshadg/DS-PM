@@ -1,5 +1,3 @@
-// /app/actions/documents.ts
-
 'use server';
 
 import prisma from "@/lib/db";
@@ -29,10 +27,17 @@ export async function deleteDocument(documentId: string) {
   }
 }
 
-export async function uploadDocument(propertyId: string, url: string) {
+export async function uploadDocument(propertyId: string, url: string, originalName: string) {
   try {
     const user = await getCurrentUser();
     if (!user) throw new Error("Unauthorized");
+
+    const fileExtension = originalName.split('.').pop()?.toLowerCase() || 'file';
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv'];
+
+    if (!allowedExtensions.includes(fileExtension)) {
+      throw new Error("Unsupported file type");
+    }
 
     const property = await prisma.property.findUnique({
       where: { id: propertyId, ownerId: user.id }
@@ -43,9 +48,9 @@ export async function uploadDocument(propertyId: string, url: string) {
     const document = await prisma.propertyDocument.create({
       data: {
         propertyId,
-        url,
-        name: url.split('/').pop() || 'Document',
-        type: url.split('.').pop()?.toUpperCase() || 'FILE'
+        url: url.replace('/image/upload/', '/raw/upload/'),
+        name: originalName,
+        type: originalName.split('.').pop()?.toUpperCase() || 'FILE'
       }
     });
 

@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '4mb' // Add this line to fix the type
+      bodySizeLimit: '10mb' // Add this line to fix the type
     },
     optimizePackageImports: [
       '@radix-ui/react-dropdown-menu',

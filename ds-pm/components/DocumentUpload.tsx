@@ -4,61 +4,66 @@ import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "./ui/button";
 import { FileIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type DocumentUploadProps = {
   onUpload: (urls: string[]) => void;
   onRemove: (url: string) => void;
-  initialFiles?: (string | null | undefined)[];
+  initialFiles?: string[];
   maxSize?: number;
+  className?: string;
 };
 
 export function DocumentUpload({ 
   onUpload, 
   onRemove, 
   initialFiles = [], 
-  maxSize = 25 * 1024 * 1024 
+  maxSize = 25 * 1024 * 1024,
+  className = ""
 }: DocumentUploadProps) {
   const [files, setFiles] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    const validInitialFiles = initialFiles
-      .filter((url): url is string => Boolean(url) && typeof url === 'string')
-      .map(url => url.startsWith('blob:') ? url : decodeURIComponent(url));
-    setFiles(validInitialFiles);
+    setFiles(initialFiles.filter(url => typeof url === 'string'));
   }, [initialFiles]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     try {
       setIsUploading(true);
-      const newUrls = acceptedFiles
-        .map(file => URL.createObjectURL(file))
-        .filter(url => typeof url === 'string');
-      
-      const updatedFiles = [
-        ...files.filter(url => typeof url === 'string'),
-        ...newUrls
-      ];
-      
-      setFiles(updatedFiles);
-      onUpload(updatedFiles);
+      const uploadPromises = acceptedFiles.map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'document');
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        
+        return result.url;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setFiles(prev => [...prev, ...uploadedUrls]);
+      onUpload(uploadedUrls);
+      toast.success('Documents uploaded successfully');
     } catch (error) {
-      console.error('Document upload failed:', error);
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setIsUploading(false);
     }
-  }, [files, onUpload]);
+  }, [onUpload]);
 
   const handleRemove = (url: string) => {
     const updatedFiles = files.filter(file => file !== url);
     setFiles(updatedFiles);
     onRemove(url);
-    onUpload(updatedFiles);
-    try {
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.warn('Failed to revoke object URL:', url);
-    }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -76,7 +81,7 @@ export function DocumentUpload({
   });
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", className)}>
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
@@ -104,12 +109,22 @@ export function DocumentUpload({
         <div className="grid grid-cols-1 gap-2">
           {files.map((url) => (
             url && (
-              <div key={url} className="flex items-center justify-between p-2 border rounded">
-                <div className="flex items-center gap-2 truncate">
-                  <FileIcon className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate text-sm">
-                    {(url || '').split('/').pop() || 'Document'}
-                  </span>
+              <div key={url} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                <div className="flex items-center gap-3 truncate">
+                  <FileIcon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate hover:underline"
+                  >
+                    <p className="text-sm font-medium truncate">
+                      {url.split('/').pop() || 'Document'}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {url}
+                    </p>
+                  </a>
                 </div>
                 <Button
                   type="button"
